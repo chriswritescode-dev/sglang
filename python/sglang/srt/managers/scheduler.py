@@ -491,7 +491,7 @@ class Scheduler(
                     tp_rank=self.tp_rank,
                     moe_ep_rank=self.moe_ep_rank,
                     server_args=self.server_args,
-                    nccl_port=self.port_args.nccl_port,
+                    nccl_port=self.nccl_port,
                     target_worker=self.tp_worker,
                     dp_rank=self.dp_rank,
                 )
@@ -503,7 +503,7 @@ class Scheduler(
                     tp_rank=self.tp_rank,
                     moe_ep_rank=self.moe_ep_rank,
                     server_args=self.server_args,
-                    nccl_port=self.port_args.nccl_port,
+                    nccl_port=self.nccl_port,
                     target_worker=self.tp_worker,
                     dp_rank=self.dp_rank,
                 )
@@ -630,7 +630,6 @@ class Scheduler(
 
                 self.tree_cache = SWAChunkCache(params)
         else:
-
             if envs.SGLANG_EXPERIMENTAL_CPP_RADIX_TREE.get():
                 # lazy import to avoid JIT overhead
                 from sglang.srt.mem_cache.radix_cache_cpp import RadixCacheCpp
@@ -1901,7 +1900,6 @@ class Scheduler(
 
         # Get requests from the waiting queue to a new prefill batch
         for req in self.waiting_queue:
-
             if self.enable_lora:
                 new_lora_set = (
                     lora_set
