@@ -161,7 +161,7 @@ def get_default_config(
                 "BLOCK_SIZE_K": 128,
                 "GROUP_SIZE_M": 32,
                 "num_warps": 8,
-                "num_stages": 2 if _is_hip else 4,
+                "num_stages": 2,  # Reduced for Blackwell sm_120 shared memory limit (101376 bytes)
             }
             if M <= E:
                 config = {
@@ -170,7 +170,7 @@ def get_default_config(
                     "BLOCK_SIZE_K": 128,
                     "GROUP_SIZE_M": 1,
                     "num_warps": 4,
-                    "num_stages": 2 if _is_hip else 4,
+                    "num_stages": 2,  # Reduced for Blackwell sm_120 shared memory limit (101376 bytes)
                 }
         else:
             # Block-wise quant: BLOCK_SIZE_K must be divisible by block_shape[1]
@@ -180,7 +180,7 @@ def get_default_config(
                 "BLOCK_SIZE_K": block_shape[1],
                 "GROUP_SIZE_M": 32,
                 "num_warps": 4,
-                "num_stages": 2 if _is_hip else 3,
+                "num_stages": 2,  # Reduced for Blackwell sm_120 shared memory limit (101376 bytes)
             }
     else:
         config = {

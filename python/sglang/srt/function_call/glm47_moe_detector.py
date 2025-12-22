@@ -418,7 +418,7 @@ class Glm47MoeDetector(BaseFormatDetector):
             )
             if partial_match:
                 func_name = partial_match.group(1).strip()
-                func_args_raw = partial_match.group(2).strip()
+                func_args_raw = (partial_match.group(2) or "").strip()
                 is_tool_end = partial_match.group(3)
 
                 # Initialize state if this is the first tool call
@@ -438,7 +438,9 @@ class Glm47MoeDetector(BaseFormatDetector):
 
                 # Send tool name first if not sent yet
                 if not self.current_tool_name_sent:
-                    assert func_name, "func_name should not be empty"
+                    # If func_name is empty, wait for more data
+                    if not func_name:
+                        return StreamingParseResult(normal_text="", calls=[])
                     calls.append(
                         ToolCallItem(
                             tool_index=self.current_tool_id,
