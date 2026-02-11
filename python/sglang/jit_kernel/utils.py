@@ -309,7 +309,12 @@ def get_jit_cuda_arch() -> ArchInfo:
 def is_arch_support_pdl() -> bool:
     if is_hip_runtime():
         return False
-    return get_jit_cuda_arch().major >= 9
+    major = get_jit_cuda_arch().major
+    # PDL is supported on SM90 (Hopper) and above, but on SM120 (Blackwell)
+    # the PDL PTX instructions (griddepcontrol.wait/launch_dependents) are
+    # incompatible with CUDA graph capture and cause "invalid resource handle".
+    # Disable PDL on SM120+ until this is resolved in the CUDA driver/toolkit.
+    return 9 <= major < 12
 
 
 def _find_package_root(package: str) -> Optional[pathlib.Path]:
