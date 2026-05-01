@@ -63,4 +63,8 @@ def is_arch_support_pdl() -> bool:
         major, _ = torch.cuda.get_device_capability(device)
     except Exception:
         return False
-    return major >= 9
+    # PDL is supported on SM90 (Hopper) and above, but on SM120 (Blackwell)
+    # the PDL PTX instructions (griddepcontrol.wait/launch_dependents) are
+    # incompatible with CUDA graph capture and cause "invalid resource handle".
+    # Disable PDL on SM120+ until this is resolved in the CUDA driver/toolkit.
+    return 9 <= major < 12

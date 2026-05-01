@@ -370,11 +370,21 @@ cudaError_t BatchQKApplyRotaryPosIdsCosSinCacheEnhanced(
     config.blockDim = nthrs;                                          \
     config.dynamicSmemBytes = 0;                                      \
     config.stream = stream;                                           \
+    /* Skip PDL launch attribute during CUDA graph capture - the      \
+       ProgrammaticStreamSerialization attribute is incompatible with \
+       graph capture on SM120 (Blackwell) and causes "invalid         \
+       resource handle". */                                           \
+    cudaStreamCaptureStatus capture_status = cudaStreamCaptureStatusNone; \
+    cudaStreamIsCapturing(stream, &capture_status);                   \
     cudaLaunchAttribute attrs[1] = {};                                \
-    attrs[0].id = cudaLaunchAttributeProgrammaticStreamSerialization; \
-    attrs[0].val.programmaticStreamSerializationAllowed = enable_pdl; \
-    config.numAttrs = 1;                                              \
-    config.attrs = attrs;                                             \
+    if (enable_pdl && capture_status == cudaStreamCaptureStatusNone) {\
+      attrs[0].id = cudaLaunchAttributeProgrammaticStreamSerialization;\
+      attrs[0].val.programmaticStreamSerializationAllowed = true;     \
+      config.numAttrs = 1;                                            \
+      config.attrs = attrs;                                           \
+    } else {                                                          \
+      config.numAttrs = 0;                                            \
+    }                                                                 \
                                                                       \
     FLASHINFER_CUDA_CALL(cudaLaunchKernelEx(                          \
         &config,                                                      \
