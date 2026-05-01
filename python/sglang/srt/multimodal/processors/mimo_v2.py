@@ -23,10 +23,18 @@ import torch
 import torch.nn.functional as F
 from fastapi import HTTPException
 from PIL import Image
-from torchcodec.decoders import AudioDecoder
 from transformers.models.qwen2_5_vl.configuration_qwen2_5_vl import (
     Qwen2_5_VLVisionConfig,
 )
+
+try:
+    from torchcodec.decoders import AudioDecoder
+except (ImportError, RuntimeError) as _torchcodec_err:
+    print(
+        f"[Warning] torchcodec not available ({type(_torchcodec_err).__name__}), "
+        "audio decoding via torchcodec will not be supported"
+    )
+    AudioDecoder = None
 
 from sglang.srt.managers.schedule_batch import (
     Modality,
@@ -541,6 +549,12 @@ class MiMoProcessor:
                         raise
                 else:
                     file = audio
+            if AudioDecoder is None:
+                raise RuntimeError(
+                    "Audio input requires torchcodec, which is not loadable in this "
+                    "environment (typically due to FFmpeg version mismatch). "
+                    "Audio decoding is disabled."
+                )
             try:
                 samples = AudioDecoder(file).get_all_samples()
             except RuntimeError as e:
